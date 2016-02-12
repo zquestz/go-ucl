@@ -29,12 +29,12 @@
 package ucl
 
 import (
-	"testing"
-	"encoding/json"
 	"bytes"
-	"time"
-	"os"
+	"encoding/json"
 	"io"
+	"os"
+	"testing"
+	"time"
 )
 
 func BenchmarkParser(b *testing.B) {
@@ -88,9 +88,7 @@ EODX
 	b.Log("Total loops:", b.N)
 }
 
-
-
-func TestParser (t *testing.T) {
+func TestParser(t *testing.T) {
 	s := `
 section {
     foo = bar;
@@ -166,7 +164,6 @@ EODX;
 	os.Stdout.Write([]byte("ENCODE >>\n"))
 	Encode(os.Stdout, ucl, "\t", "json", "")
 
-
 	// Byte-level accuracy test
 	var ibuf bytes.Buffer
 	Encode(&ibuf, ucl, "   ", "json", "")
@@ -193,9 +190,7 @@ EODX;
 		}
 	}
 	t.Log("***** OK! *****")
-	t.Log("\n"+string(b1))
-
-
+	t.Log("\n" + string(b1))
 
 	t.Log("Testing anonymous and struct encoding")
 

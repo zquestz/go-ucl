@@ -28,28 +28,28 @@
 package ucl
 
 import (
-	"fmt"
 	"bytes"
-	"io"
-	"strings"
-	"strconv"
-	"unicode/utf8"
 	"errors"
+	"fmt"
+	"io"
+	"strconv"
+	"strings"
+	"unicode/utf8"
 )
 
 const (
 	WHITESPACE = iota
 	TAG
-	SEMICOL          // semi-colon ;
-	COMMA            // ,
-	COLON            // :
-	EQUAL            // =
-	QUOTE            // double quote string
-	VQUOTE           // single quote string
-	SLASH            // regex or /* */ comment
-	HCOMMENT         // # ...
-	LCOMMENT         // /* ... */
-	MLSTRING         // <<EOD multi-line string
+	SEMICOL  // semi-colon ;
+	COMMA    // ,
+	COLON    // :
+	EQUAL    // =
+	QUOTE    // double quote string
+	VQUOTE   // single quote string
+	SLASH    // regex or /* */ comment
+	HCOMMENT // # ...
+	LCOMMENT // /* ... */
+	MLSTRING // <<EOD multi-line string
 
 	BRACEOPEN
 	BRACECLOSE
@@ -60,7 +60,7 @@ const (
 	// scanner indicators only:
 
 	LCOMMENT_CLOSING // Not a tag, just indicator of possibly '*/'
-	                 // closing indicator
+	// closing indicator
 	MAYBE_MLSTRING
 	MAYBE_MLSTRING2
 	MLSTRING_PREP
@@ -76,7 +76,7 @@ type tag struct {
 	val   []byte
 	state int
 
-	flag  int       // used by parser
+	flag int // used by parser
 }
 
 var UnexpectedEOF = errors.New("Unexpected EOF")
@@ -87,29 +87,29 @@ type scanner struct {
 	bufmax int
 	bufi   int
 
-	depth  []byte    // current depth of scopes, e.g. [ '[', '{' ]
-	                 // to determine when the scope closes
+	depth []byte // current depth of scopes, e.g. [ '[', '{' ]
+	// to determine when the scope closes
 	curtag []byte
 	curch  byte
 
-	state  int
+	state   int
 	skipsep int
 
-	line   int       // current input line
+	line int // current input line
 
 	mlstring_tag []byte // "EOD" tag of ML string
-	curline []byte
+	curline      []byte
 
-	err    error
+	err error
 }
 
 func newScanner(rio io.Reader) *scanner {
 	return &scanner{
-	                 r: rio,
-	                 depth: make([]byte, 0, 1024),
-	                 curtag: make([]byte, 0, 1024),
-	                 line: 1,
-	               }
+		r:      rio,
+		depth:  make([]byte, 0, 1024),
+		curtag: make([]byte, 0, 1024),
+		line:   1,
+	}
 }
 
 func (s *scanner) scopeadd(c byte) {
@@ -174,7 +174,7 @@ func (s *scanner) maketag(v []byte, state int) (t *tag) {
 		qs, err := unquote(string(s.curtag), c)
 		if err != nil {
 			s.err = fmt.Errorf("unable to unquote \"%s\", line %d",
-			                   string(s.curtag), s.line)
+				string(s.curtag), s.line)
 			return nil
 		}
 		t.val = []byte(qs)
@@ -242,10 +242,10 @@ func (s *scanner) nexttags() (tags []*tag, err error) {
 			if len(s.curtag) > 0 && s.curtag[len(s.curtag)-1] <= ' ' {
 				s.discard()
 				/*
-				tags = append(tags, s.maketag(nil, 0))
-				if s.err != nil {
-					return nil, s.err
-				}
+					tags = append(tags, s.maketag(nil, 0))
+					if s.err != nil {
+						return nil, s.err
+					}
 				*/
 			}
 
@@ -314,8 +314,8 @@ func (s *scanner) nexttags() (tags []*tag, err error) {
 
 			case '=', ':':
 				if len(tags) == 0 ||
-				   (tags[len(tags)-1].state != QUOTE &&
-				    tags[len(tags)-1].state != VQUOTE) {
+					(tags[len(tags)-1].state != QUOTE &&
+						tags[len(tags)-1].state != VQUOTE) {
 					return nil, fmt.Errorf("unexpected '%c' at line %d", c, s.line)
 				}
 				s.state = TAG
@@ -391,7 +391,7 @@ func (s *scanner) nexttags() (tags []*tag, err error) {
 				}
 
 				// scan backwards and terminate previous tag
-				for i := len(s.curtag)-1; i >= 0; i-- {
+				for i := len(s.curtag) - 1; i >= 0; i-- {
 					if s.curtag[i] > ' ' {
 						tags = append(tags, s.maketag(s.curtag[0:i+1], TAG))
 						if s.err != nil {
@@ -413,7 +413,7 @@ func (s *scanner) nexttags() (tags []*tag, err error) {
 				return tags, nil
 
 			} else if c == '\'' || c == '"' {
-				for i := len(s.curtag)-1; i >= 0; i-- {
+				for i := len(s.curtag) - 1; i >= 0; i-- {
 					if s.curtag[i] > ' ' {
 						tags = append(tags, s.maketag(s.curtag[0:i+1], TAG))
 						if s.err != nil {
@@ -458,7 +458,7 @@ func (s *scanner) nexttags() (tags []*tag, err error) {
 				}
 
 				// scan backwards and terminate previous tag
-				for i := len(s.curtag)-1; i >= 0; i-- {
+				for i := len(s.curtag) - 1; i >= 0; i-- {
 					if s.curtag[i] > ' ' {
 						tags = append(tags, s.maketag(s.curtag[0:i+1], TAG))
 						if s.err != nil {
@@ -534,12 +534,12 @@ func (s *scanner) nexttags() (tags []*tag, err error) {
 					if s.err != nil {
 						return nil, s.err
 					}
-				} else if s.skipsep & skip_white == 0 {
+				} else if s.skipsep&skip_white == 0 {
 					s.curtag = append(s.curtag, c)
 				}
 
 			} else if c == ':' || c == '=' {
-				if s.skipsep & skip_sep != 0 {
+				if s.skipsep&skip_sep != 0 {
 					// only skip the first seen : or =, after that
 					// it is considered a part of the tag's value
 					tags = append(tags, s.maketag(nil, 0))
@@ -578,7 +578,7 @@ func (s *scanner) nexttags() (tags []*tag, err error) {
 		case MAYBE_MLSTRING:
 			s.curtag = append(s.curtag, c)
 			if c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' ||
-			   c >= '0' && c <= '9' {
+				c >= '0' && c <= '9' {
 				s.state = MLSTRING_PREP
 				s.curline = make([]byte, 0, 128)
 				s.curline = append(s.curline, c)
@@ -590,7 +590,7 @@ func (s *scanner) nexttags() (tags []*tag, err error) {
 			// still on <<EOD multiline header line
 			// continue until EOL
 			if c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' ||
-			   c >= '0' && c <= '9' {
+				c >= '0' && c <= '9' {
 				// XXX Send the tag key
 				if s.curtag[0] != '<' {
 					ti := 0
@@ -686,7 +686,7 @@ func (s *scanner) nexttags() (tags []*tag, err error) {
 				break
 
 			} else if (s.state == QUOTE && c == '"') ||
-			          (s.state == VQUOTE && c == '\'') {
+				(s.state == VQUOTE && c == '\'') {
 				tags = append(tags, s.maketag(nil, 0))
 				if s.err != nil {
 					return nil, s.err
@@ -799,7 +799,6 @@ func (s *scanner) nexttags() (tags []*tag, err error) {
 func (s *scanner) LatestTag() (string, int) {
 	return string(s.curtag), s.state
 }
-
 
 // From go-src:strconv.Unquote but modified so that a quote character can
 // be provided instead of requiring the string to be pre-quoted
